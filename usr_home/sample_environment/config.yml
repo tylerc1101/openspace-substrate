@@ -18,7 +18,14 @@ rke2_network:
       - "10.0.0.53"
 
 #------------------------------------------------------------------------------  
-# 2) Platform & Registry Selection
+# 2) Infrastructure
+#------------------------------------------------------------------------------
+infrastructure: baremetal
+#infrastructure: vmware
+#infrastructure: aws
+
+#------------------------------------------------------------------------------  
+# 3) Platform & Registry Selection
 #------------------------------------------------------------------------------
 kubernetes_platform: "rancher"
 #kubernetes_platform: "eks"
@@ -27,7 +34,7 @@ container_registry: "harbor"
 #container_registry: "ecr"
 
 #------------------------------------------------------------------------------  
-# 3) Registry Configuration
+# 4) Registry Configuration
 #------------------------------------------------------------------------------
 registry_config:
 
@@ -46,7 +53,7 @@ registry_config:
     iam_role_arn: "arn:aws:iam::123456789012:role/ECRPushPull"
 
 #------------------------------------------------------------------------------  
-# 4) Clusters & Nodes
+# 5) Clusters & Nodes
 #------------------------------------------------------------------------------
 # mcms/osms/osdc are lists. Each item lets you scale up/down freely.
 # name is your cluster/logical node name; ip is the node’s primary IP on rke2_network.
