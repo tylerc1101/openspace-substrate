@@ -1,0 +1,21 @@
+- id: preflight
+  kind: bash
+  label: "Preflight checks"
+  script: "/docker-workspace/tasks/preflight.sh"
+
+- id: push-images
+  kind: ansible
+  label: "Push images to Harbor"
+  playbook: "/docker-workspace/tasks/push-images-harbor.yml"
+  inventory: "/usr_home/{{env}}/ansible/inventory.ini"
+
+- id: rke2
+  kind: ansible
+  label: "Install & bootstrap RKE2"
+  playbook: "/docker-workspace/tasks/deploy-rke2.yml"
+  inventory: "/usr_home/{{env}}/ansible/inventory.ini"
+
+- id: addons
+  kind: helmfile
+  label: "Deploy Helm addons"
+  helmfile: "/usr_home/{{env}}/helmfile/helmfile.yaml"

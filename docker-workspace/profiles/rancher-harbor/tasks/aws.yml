@@ -1,0 +1,7 @@
+- id: aws-nginx-bootstrap
+  kind: ansible
+  label: "AWS: Deploy temporary nginx (pre-addons)"
+  playbook: "/docker-workspace/tasks/aws/nginx-bootstrap.yml"
+  inventory: "/usr_home/{{env}}/ansible/inventory.ini"
+  after: "rke2"
+  depends_on: ["rke2"]
