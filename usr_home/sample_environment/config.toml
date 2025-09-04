@@ -3,6 +3,7 @@
 [core]
 infrastructure = "baremetal"          # "baremetal" | "vmware" | "aws"
 profile = "rancher-harbor"            # "rancher-harbor" | "rancher-ecr"
+hardened = true
 
 [dns]
 servers = ["10.0.0.52", "10.0.0.53"]
