@@ -1,0 +1,48 @@
+# usr_home/<env>/config.ini
+
+[core]
+infrastructure = "baremetal"          # "baremetal" | "vmware" | "aws"
+kubernetes_platform = "rancher"       # "rancher" | "eks"
+container_registry = "harbor"         # "harbor" | "ecr"
+
+[dns]
+servers = ["10.0.0.52", "10.0.0.53"]
+domain_name = "example.local"
+
+[ntp]
+servers = ["10.0.0.52", "10.0.0.53"]
+
+[harbor]
+project = "onboarder"
+
+[ecr]
+aws_account_id = "123456789012"
+region = "us-east-2"
+repository = "onboarder"
+iam_role_arn = "arn:aws:iam::123456789012:role/ECRPushPull"
+
+# Cluster definitions: cluster_name + array of nodes
+[mcms]
+cluster_name = "mcm-cluster"
+nodes = [
+  { name = "mcm1", ip = "10.0.0.110" },
+  { name = "mcm2", ip = "10.0.0.111" },
+  { name = "mcm3", ip = "10.0.0.112" }
+]
+
+[osms]
+cluster_name = "osms-cluster"
+nodes = [
+  { name = "osms1", ip = "10.0.0.113" },
+  { name = "osms2", ip = "10.0.0.114" },
+  { name = "osms3", ip = "10.0.0.115" }
+]
+
+[osdc]
+cluster_name = "osdc-cluster"
+nodes = [
+  { name = "osdc1", ip = "10.0.0.116" },
+  { name = "osdc2", ip = "10.0.0.117" },
+  { name = "osdc3", ip = "10.0.0.118" }
+]
+
