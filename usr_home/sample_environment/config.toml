@@ -2,8 +2,7 @@
 
 [core]
 infrastructure = "baremetal"          # "baremetal" | "vmware" | "aws"
-kubernetes_platform = "rancher"       # "rancher" | "eks"
-container_registry = "harbor"         # "harbor" | "ecr"
+profile = "rancher-harbor"            # "rancher-harbor" | "rancher-ecr"
 
 [dns]
 servers = ["10.0.0.52", "10.0.0.53"]
@@ -12,9 +11,11 @@ domain_name = "example.local"
 [ntp]
 servers = ["10.0.0.52", "10.0.0.53"]
 
+# Should this be in a value sheet seperate from here
 [harbor]
 project = "onboarder"
 
+# May add this information to the secrets
 [ecr]
 aws_account_id = "123456789012"
 region = "us-east-2"
