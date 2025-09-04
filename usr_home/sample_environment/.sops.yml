@@ -1,4 +1,1 @@
-creation_rules:
-  - path_regex: secrets\.sops\.ya?ml$
-    encrypted_regex: '^(linux\.|rke2\.|harbor\.|rancher\.)'
-    age: ["<PUBLIC_AGE_KEY>"]   # filled in during init
+# Generated on onboarder secrets init
