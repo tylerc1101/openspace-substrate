@@ -106,3 +106,4 @@ exec "$RUNTIME" run --rm \
   "${V_OPTS[@]}" \
   "${IMAGE}" \
   /docker-workspace/onboarder.sh "$@"
+
