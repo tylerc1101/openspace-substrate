@@ -1,15 +1,19 @@
 # syntax=docker/dockerfile:1.6
-FROM platform-one-ironbank-docker-remote.bits.devops.kratosdefense.com/ironbank/redhat/ubi/ubi8:8.10
+FROM platform-one-ironbank-docker-remote.bits.devops.kratosdefense.com/ironbank/redhat/ubi/ubi9:9.5
 
 # Install required tools
-RUN microdnf install -y \
-      ca-certificates curl bash coreutils findutils procps iproute \
-      openssh-clients gnupg2 git jq yq python39 \
-  && microdnf clean all
+RUN dnf install -y --allowerasing \
+      ca-certificates curl bash findutils procps iproute \
+      openssh-clients gnupg2 git jq python312 \
+  && dnf clean all
 
 # Set working directory for onboarder logic
 WORKDIR /docker-workspace
 COPY docker-workspace/ /docker-workspace/
+
+# Ensure scripts & tools are executable
+RUN find /docker-workspace -type f -name "*.sh" -exec chmod +x {} \; && \
+    chmod -R +x /docker-workspace/tools || true
 
 # Environment defaults (constant across runs)
 ENV ANSIBLE_CONFIG=/docker-workspace/ansible/ansible.cfg \

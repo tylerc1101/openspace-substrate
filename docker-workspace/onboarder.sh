@@ -15,7 +15,21 @@ onboarder
 EOF
 }
 
-require_env() { [[ "${1:-}" == "--env" ]] || { echo "Missing --env"; exit 2; }; [[ -n "${2:-}" ]] || { echo "Empty env"; exit 2; }; echo "$2"; }
+require_env() {
+  case "${1:-}" in
+    --env)
+      [[ -n "${2:-}" ]] || { echo "Empty --env value"; exit 2; }
+      echo "$2"
+      ;;
+    --env=*)
+      echo "${1#--env=}"
+      ;;
+    *)
+      echo "Missing --env"; exit 2
+      ;;
+  esac
+}
+
 
 cmd_init() {
   local env; env="$(require_env "$@")"
