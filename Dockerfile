@@ -9,12 +9,12 @@ FROM platform-one-ironbank-docker-remote.bits.devops.kratosdefense.com/ironbank/
 
 # Install build-time dependencies and required runtime tools
 RUN --mount=type=cache,target=/var/cache/dnf \
-    microdnf install -y \
+    dnf install -y \
       # Runtime tools
       ca-certificates curl bash coreutils findutils procps iproute \
       openssh-clients gnupg2 git python312 \
       # Cleanup
-  && microdnf clean all \
+  && dnf clean all \
   && rm -rf /var/cache/dnf
 
 # ==================================================================
