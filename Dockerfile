@@ -14,7 +14,7 @@ RUN --mount=type=cache,target=/var/cache/dnf \
       ca-certificates bash findutils procps iproute \
       openssh-clients gnupg2 git python312 \
       # Cleanup
-  && dnf clean all \
+  && dnf clean all
 
 # ==================================================================
 # Final Stage
