@@ -2,8 +2,8 @@
 set -euo pipefail
 
 # ===== CONFIG =====
-IMAGE_NAME="ghcr.io/yourorg/onboarder"
-IMAGE_TAG="1.0.0"
+IMAGE_NAME="localhost/openspace/onboarder"
+IMAGE_TAG="1.0"
 IMAGE="${IMAGE_NAME}:${IMAGE_TAG}"
 IMAGE_ARCHIVE="onboarder-${IMAGE_TAG}.oci.tar"
 CONTAINER_NAME="onboarder"
@@ -97,3 +97,5 @@ exec "$RUNTIME" run --rm \
   --workdir "${CONT_DOCKER_WORKSPACE}" \
   "${USER_FLAG[@]}" \
   "${V_OPTS[@]}" \
+  "${IMAGE}" \
+  /docker-workspace/onboarder.py "$@"
