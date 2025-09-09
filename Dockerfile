@@ -12,10 +12,9 @@ RUN --mount=type=cache,target=/var/cache/dnf \
     dnf install -y \
       # Runtime tools
       ca-certificates bash findutils procps iproute \
-      openssh-clients gnupg2 git \
+      openssh-clients gnupg2 git python312 \
       # Cleanup
   && dnf clean all \
-  && rm -rf /var/cache/dnf
 
 # ==================================================================
 # Final Stage
