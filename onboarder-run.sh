@@ -48,12 +48,10 @@ fi
 V_OPTS=()
 case "$RUNTIME" in
   podman)
-    V_OPTS+=("-v" "${HOST_DOCKER_WORKSPACE}:${CONT_DOCKER_WORKSPACE}:ro,z")
     V_OPTS+=("-v" "${HOST_DATA}:${CONT_DATA}:z")
     V_OPTS+=("-v" "${HOST_USR_HOME}:${CONT_USR_HOME}:z")
     ;;
   docker)
-    V_OPTS+=("-v" "${HOST_DOCKER_WORKSPACE}:${CONT_DOCKER_WORKSPACE}:ro,Z")
     V_OPTS+=("-v" "${HOST_DATA}:${CONT_DATA}:Z")
     V_OPTS+=("-v" "${HOST_USR_HOME}:${CONT_USR_HOME}:Z")
     ;;
