@@ -11,7 +11,7 @@ FROM platform-one-ironbank-docker-remote.bits.devops.kratosdefense.com/ironbank/
 RUN --mount=type=cache,target=/var/cache/dnf \
     dnf install -y \
       # Runtime tools
-      ca-certificates curl bash coreutils findutils procps iproute \
+      ca-certificates bash findutils procps iproute \
       openssh-clients gnupg2 git python312 \
       # Cleanup
   && dnf clean all \
