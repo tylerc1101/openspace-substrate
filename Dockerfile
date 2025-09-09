@@ -21,7 +21,6 @@ RUN --mount=type=cache,target=/var/cache/dnf \
 #
 # Creates a minimal final image with a non-root user.
 # ==================================================================
-FROM platform-one-ironbank-docker-remote.bits.devops.kratosdefense.com/ironbank/redhat/ubi/ubi8:8.10
 
 # Add OCI labels for metadata
 LABEL org.opencontainers.image.source="https://github.com/tylerc1101/openspace-substrate"
