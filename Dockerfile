@@ -5,14 +5,14 @@
 #
 # Installs all necessary tools and dependencies.
 # ==================================================================
-FROM platform-one-ironbank-docker-remote.bits.devops.kratosdefense.com/ironbank/redhat/ubi/ubi8:8.10 AS builder
+FROM platform-one-ironbank-docker-remote.bits.devops.kratosdefense.com/ironbank/redhat/ubi/ubi9:9.5 AS builder
 
 # Install build-time dependencies and required runtime tools
 RUN --mount=type=cache,target=/var/cache/dnf \
     microdnf install -y \
       # Runtime tools
       ca-certificates curl bash coreutils findutils procps iproute \
-      openssh-clients gnupg2 git jq yq python39 \
+      openssh-clients gnupg2 git python312 \
       # Cleanup
   && microdnf clean all \
   && rm -rf /var/cache/dnf
