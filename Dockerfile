@@ -1,15 +1,45 @@
-# syntax=docker/dockerfile:1.6
-FROM platform-one-ironbank-docker-remote.bits.devops.kratosdefense.com/ironbank/redhat/ubi/ubi8:8.10
+# syntax=docker/dockerfile:1.7
 
-# Install required tools
-RUN microdnf install -y \
+# ==================================================================
+# Builder Stage
+#
+# Installs all necessary tools and dependencies.
+# ==================================================================
+FROM platform-one-ironbank-docker-remote.bits.devops.kratosdefense.com/ironbank/redhat/ubi/ubi8:8.10 AS builder
+
+# Install build-time dependencies and required runtime tools
+RUN --mount=type=cache,target=/var/cache/dnf \
+    microdnf install -y \
+      # Runtime tools
       ca-certificates curl bash coreutils findutils procps iproute \
       openssh-clients gnupg2 git jq yq python39 \
-  && microdnf clean all
+      # Cleanup
+  && microdnf clean all \
+  && rm -rf /var/cache/dnf
 
-# Set working directory for onboarder logic
+# ==================================================================
+# Final Stage
+#
+# Creates a minimal final image with a non-root user.
+# ==================================================================
+FROM platform-one-ironbank-docker-remote.bits.devops.kratosdefense.com/ironbank/redhat/ubi/ubi8:8.10
+
+# Add OCI labels for metadata
+LABEL org.opencontainers.image.source="https://github.com/tylerc1101/openspace-substrate"
+LABEL org.opencontainers.image.description="Onboarder container for managing infrastructure deployments."
+LABEL org.opencontainers.image.licenses="MIT"
+
+# Create a non-root user and group
+RUN groupadd --gid 10001 onboarder \
+ && useradd --uid 10001 --gid 10001 --shell /bin/bash --create-home onboarder
+
+# Copy installed tools from the builder stage
+COPY --from=builder / /
+
+# Set up the workspace directory
 WORKDIR /docker-workspace
-COPY docker-workspace/ /docker-workspace/
+COPY --chown=onboarder:onboarder docker-workspace/ /docker-workspace/
+RUN chmod +x /docker-workspace/onboarder.py
 
 # Environment defaults (constant across runs)
 ENV ANSIBLE_CONFIG=/docker-workspace/ansible/ansible.cfg \
@@ -19,4 +49,12 @@ ENV ANSIBLE_CONFIG=/docker-workspace/ansible/ansible.cfg \
     TF_CLI_CONFIG_FILE=/docker-workspace/terraform/terraformrc \
     PATH="/docker-workspace/tools:${PATH}"
 
-CMD ["/docker-workspace/onboarder.sh", "doctor"]
+# Switch to the non-root user
+USER onboarder:onboarder
+
+# Healthcheck to monitor container status
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD [ "/docker-workspace/onboarder.py", "doctor" ]
+
+# Default command to run when the container starts
+CMD ["/docker-workspace/onboarder.py", "doctor"]
