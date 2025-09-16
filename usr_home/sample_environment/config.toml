@@ -4,6 +4,7 @@
 infrastructure = "baremetal"          # "baremetal" | "vmware" | "aws"
 profile = "rancher-harbor"            # "rancher-harbor" | "rancher-ecr"
 hardened = true
+onboarder = onboarder-full.3.6.0.tar.gz
 
 [dns]
 servers = ["10.0.0.52", "10.0.0.53"]
