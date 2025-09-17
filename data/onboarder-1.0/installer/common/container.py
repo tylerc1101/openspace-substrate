@@ -8,11 +8,11 @@ def detect_engine() -> str:
         return "podman"
     if shutil.which("docker"):
         return "docker"
-    raise FileNotFoundError("No container engine found in PATH (podman/docker)")
+    raise FileNotFoundError("No container engine found (docker or podman)")
 
 def load_image(engine: str, tarball: Path) -> None:
     cmd = [engine, "load", "-i", str(tarball)]
-    proc = subprocess.run(cmd, check=False, text=True, capture_output=True)
+    proc = subprocess.run(cmd, check=False, capture_output=True, text=True)
     if proc.returncode != 0:
         raise subprocess.CalledProcessError(proc.returncode, cmd, proc.stdout, proc.stderr)
     if proc.stdout:
@@ -25,10 +25,6 @@ def _glob_many(base: Path, patterns: Sequence[str]) -> list[Path]:
     return out
 
 def find_version_image_tar(version_root: Path) -> Optional[Path]:
-    """
-    Look under <version_root>/images for an image tarball.
-    Returns the most recently modified match among common extensions.
-    """
     images_dir = version_root / "images"
     if not images_dir.is_dir():
         return None
@@ -37,4 +33,3 @@ def find_version_image_tar(version_root: Path) -> Optional[Path]:
         return None
     candidates.sort(key=lambda p: p.stat().st_mtime, reverse=True)
     return candidates[0]
-
