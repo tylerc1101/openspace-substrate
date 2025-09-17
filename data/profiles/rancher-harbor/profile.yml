@@ -1,9 +1,0 @@
-id: rancher-harbor
-version: 1.0.0
-allowed_infra: ["baremetal","vmware","aws"]
-defaults:
-  addons:
-    rancher: true
-    harbor: true
-    argocd: true
-    gitea:  true

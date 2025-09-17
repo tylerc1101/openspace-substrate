@@ -1,7 +1,7 @@
 - id: preflight
-  kind: bash
   label: "Preflight checks"
-  script: "/docker-workspace/tasks/preflight.sh"
+  kind: bash
+  file: "/installer/profile/tasks/preflight.sh"
 
 - id: push-images
   kind: ansible
