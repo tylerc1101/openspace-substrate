@@ -4,7 +4,6 @@ from pathlib import Path
 
 from .tasks.env import ensure_usr_home, env_dir_for, is_fresh_env, copy_sample_env
 from .tasks.config_merge import merge_config
-from .tasks.load_container import load_version_container_best_effort
 from .tasks.secrets import handle_secrets_after_config
 from .tasks.build_plan import regenerate_build_plan
 
@@ -43,10 +42,7 @@ def handle(args: Namespace) -> int:
         print(f"💾 Backup of previous config: {merge_result.backup_path}")
     print(f"✔️ Config is at: {merge_result.config_path}")
 
-    # Load the version-specific image (best-effort)
-    load_version_container_best_effort()
-
-    # Always regenerate build plan on init (fresh or upgrade)
+    # Always regenerate build plan on init
     try:
         plan_path, plan_count, plan_preview = regenerate_build_plan(env_dir, merge_result.config_dict)
         print(f"🧭 Build plan generated ({plan_count} tasks): {plan_path}")
@@ -59,7 +55,7 @@ def handle(args: Namespace) -> int:
     except Exception as e:
         print(f"❌ ERROR: failed to generate build plan: {e}", file=sys.stderr)
 
-    # Open config editor if there are new/missing keys to fill
+    # Open config editor if there are new/missing keys
     if merge_result.missing_keys:
         print("📝 New keys that likely need attention:")
         for k in merge_result.missing_keys:

@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Tuple
 
 from installer.common import paths
-from installer.common.yaml_min import load_yaml_file, dump_yaml_file
+from installer.common.yaml_io import load_yaml_file, dump_yaml_file
 
 ALLOWED_KINDS = {"bash", "ansible", "helmfile"}  # extend as needed
 
