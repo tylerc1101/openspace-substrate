@@ -1,0 +1,94 @@
+# inventory.yml
+all:
+  vars:
+    core:
+      profile: "baremetal"
+      hardened: true
+      onboarder: "onboarder-full.3.6.0.tar.gz"
+    dns:
+      servers: ["10.0.0.52", "10.0.0.53"]
+      domain_name: "example.local"
+    ntp:
+      servers: ["10.0.0.52", "10.0.0.53"]
+
+  children:
+    mcms:
+      vars:
+        cluster_name: "mcm-cluster"
+      hosts:
+        mcm1: 
+          ansible_host: 10.0.0.110
+        mcm2: 
+          ansible_host: 10.0.0.111
+        mcm3: 
+          ansible_host: 10.0.0.112
+
+    osms:
+      vars:
+        cluster_name: "osms-cluster"
+      hosts:
+        osms1: 
+          ansible_host: 10.0.0.113
+        osms2: 
+          ansible_host: 10.0.0.114
+        osms3: 
+          ansible_host: 10.0.0.115
+
+    osdc:
+      vars:
+        cluster_name: "osdc-cluster"
+      hosts:
+        osdc1: 
+          ansible_host: 10.0.0.116
+        osdc2: 
+          ansible_host: 10.0.0.117
+        osdc3: 
+          ansible_host: 10.0.0.118
+
+    # -------------------------
+    # AWS Specific Hosts
+    # -------------------------
+    aws:
+      vars:
+        account_id: "123456789012"
+        region: "us-east-2"
+        repository: "onboarder"
+        iam_role_arn: "arn:aws:iam::123456789012:role/ECRPushPull"
+        ansible_user: "ec2-user"     # example default
+        use_private_ip: true         # example toggle your roles can use
+      hosts:
+        aws-bastion:
+          ansible_host: bastion.example.aws  # or an IP/DNS
+          role: "bastion"
+        ecr-helper:
+          ansible_host: 10.2.1.34
+          role: "ecr-helper"
+
+    # -------------------------
+    # Basekit Specific Hosts
+    # -------------------------
+    basekit:
+      vars:
+        profile: "basekit-default"
+        basekit_enable_monitoring: true
+        basekit_packages:
+          - curl
+          - jq
+          - htop
+      hosts:
+        mgmt-svr:
+          ansible_host: 10.0.0.6
+          profile: "basekit-mgmt-server"
+
+    # -------------------------
+    # Baremetal Specific Hosts
+    # -------------------------
+    baremetal:
+      vars:
+        profile: "baremetal"
+        pxe_iface: "eth0"
+
+      hosts:
+        diag:
+          ansible_host: 10.0.0.5
+          profile: "named-chrony-primary"

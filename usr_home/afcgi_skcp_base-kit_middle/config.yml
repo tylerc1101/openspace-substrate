@@ -1,0 +1,108 @@
+# inventory.yml
+all:
+  vars:
+    core:
+      profile: "basekit"
+      hardened: true
+      onboarder: "onboarder-full.3.6.0.tar.gz"
+    dns:
+      kratos: ["10.243.25.50", "10.243.25.53"]
+      rke2: "192.168.2.1"
+      domain_name: "base-kit.kratos"
+    ntp:
+      servers: "192.168.2.1"
+    gateway:
+      management: "10.243.76.1"
+      rke2: "192.168.2.1"
+
+  children:
+    mgmt-svr:
+      vars:
+      hosts:
+        mgmt-kvm: 
+          ansible_host: 10.243.77.213
+          bridges:
+            - name: "wan"
+              ifname: "br-wan"
+              con-name: "br-wan"
+              type: "bridge"
+              address: "10.243.77.213/23"
+              gateway: "{{ gateway.management }}"
+              dns: "{{ dns.kratos }}"
+              interfaces:
+                - "eno12409"
+
+            - name: "mgmt"
+              ifname: "br-mgmt"
+              con-name: "br-mgmt"
+              type: "bridge"
+              address: "192.168.2.6/24"
+              dns: "{{ dns.rke2 }}"
+              interfaces:
+                - "eno12399"
+
+            - name: "idrac"
+              ifname: "br-idrac"
+              con-name: "br-idrac"
+              type: "bridge"
+              address: "192.168.0.4/24"
+              interfaces:
+                - "ens3f0"
+
+            - name: "prov"
+              ifname: "br-prov"
+              con-name: "br-prov"
+              type: "bridge"
+              interfaces:
+                - "eno8303"
+
+          disabled_interfaces:
+            - "eno8403"
+            - "ens3f1"
+    mcms:
+      vars:
+        cluster_name: "mcm-cluster"
+      hosts:
+        mcm1: 
+          ansible_host: 192.168.2.8
+          interfaces:
+            - name: "static_enp1s0"
+              ifname: "enp1s0"
+              con_name: "static-enp1s0"
+              address: "192.168.2.8/24"
+              gateway: "{{ gateway.rke2 }}"
+              dns: "{{ dns.rke2 }}"
+          disabled_interfaces:
+            - "something_else"
+
+    osms:
+      vars:
+        cluster_name: "osms-cluster"
+      hosts:
+        osms1: 
+          ansible_host: 192.168.2.9
+          rke2_interface: "enp1s0"
+    osdc:
+      vars:
+        cluster_name: "osdc-cluster"
+      hosts:
+        osdc1: 
+          ansible_host: 10.0.0.116
+        osdc2: 
+          ansible_host: 10.0.0.117
+
+    # -------------------------
+    # Basekit Specific Hosts
+    # -------------------------
+    basekit:
+      vars:
+        profile: "basekit-default"
+        basekit_enable_monitoring: true
+        basekit_packages:
+          - curl
+          - jq
+          - htop
+      hosts:
+        mgmt-svr:
+          ansible_host: 10.0.0.6
+          profile: "basekit-mgmt-server"
