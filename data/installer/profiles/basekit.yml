@@ -1,0 +1,14 @@
+- id: Preflight Checks
+  desc: "Run a preflight check to ensure the environment is ready for installation"
+  kind: python3
+  file: "/data/installer/profiles/tasks/preflight.py"
+
+- id: Bootstrap Mgmt KVM
+  desc: "Configure/Install services on the mgmt-kvm server"
+  kind: ansible
+  file: "/data/installer/profiles/tasks/basekit-bootstrap-mgmt-kvm.yml"
+
+- id: Setup Base-Kit Structure
+  desc: "Stage OpenSpace base-kit assets on mgmt-kvm"
+  kind: ansible
+  file: "/data/installer/profiles/tasks/basekit-bootstrap-basekit-structure.yml"

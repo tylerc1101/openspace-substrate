@@ -1,0 +1,177 @@
+---
+- name: Create OpenSpace VMs with static IPs via cloud-init (and kernel args for OSDC)
+  hosts: mgmt-kvm
+  become: yes
+  vars:
+    libvirt_cfg: /var/lib/libvirt/config
+    basekit_root: /opt/openspace/openspace-base-kit/1.0.1
+
+  tasks:
+    - name: Ensure cloud-init dirs exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ libvirt_cfg }}/cloud-init/onboarder"
+        - "{{ libvirt_cfg }}/cloud-init/mcm"
+        - "{{ libvirt_cfg }}/cloud-init/osms"
+
+    # Build vm -> pubkey map (assumes you've already created + slurped keys)
+    - name: Build vm->pubkey map
+      ansible.builtin.set_fact:
+        _vm_pubkeys:
+          onboarder: "{{ ONBOARDER_SSH_KEY | default('') }}"
+          mcm: "{{ MCM_SSH_KEY | default('') }}"
+          osms: "{{ OSMS_SSH_KEY | default('') }}"
+
+    # -------- INLINE "TEMPLATES" AS COPIES --------
+    - name: Render cloud-init for cloud-image VMs (inline copy content)
+      vars:
+        vm: "{{ vms[item] }}"
+        vm_pubkey: "{{ _vm_pubkeys[item] }}"
+        ci_dir_map:
+          onboarder: onboarder
+          mcm: mcm
+          osms: osms
+      block:
+        - name: Write network-config (inline)
+          ansible.builtin.copy:
+            dest: "{{ libvirt_cfg }}/cloud-init/{{ ci_dir_map[item] }}/network-config"
+            mode: "0644"
+            content: |
+              version: 2
+              ethernets:
+                eth0:
+                  addresses: [ "{{ vm.ip }}" ]
+                  gateway4: "{{ vm.gw }}"
+                  nameservers:
+                    search: [ "{{ dns.domain_name }}" ]
+                    addresses: {{ vm.dns | to_json }}
+        - name: Write user-data (inline)
+          ansible.builtin.copy:
+            dest: "{{ libvirt_cfg }}/cloud-init/{{ ci_dir_map[item] }}/user-data"
+            mode: "0644"
+            content: |
+              #cloud-config
+              preserve_hostname: false
+              hostname: "{{ vm.hostname }}"
+              ssh_authorized_keys:
+                - "{{ vm_pubkey }}"
+              package_update: false
+              package_upgrade: false
+      loop:
+        - onboarder
+        - mcm
+        - osms
+    # ---------------------------------------------
+
+    - name: Copy meta-data (onboarder/mcm/osms)
+      ansible.builtin.copy:
+        src: "{{ basekit_root }}/config/cloud-init/{{ item }}/meta-data"
+        dest: "{{ libvirt_cfg }}/cloud-init/{{ item }}/meta-data"
+        remote_src: true
+        mode: "0644"
+      loop:
+        - onboarder
+        - mcm
+        - osms
+
+    # ---------- virt-install: Onboarder ----------
+    - name: Create VM: Onboarder (idempotent with virsh dominfo check)
+      ansible.builtin.shell: |
+        set -euo pipefail
+        if ! virsh dominfo "{{ vms.onboarder.name }}" >/dev/null 2>&1; then
+          virt-install \
+            --name "{{ vms.onboarder.name }}" \
+            --ram "{{ vms.onboarder.ram }}" \
+            --vcpu "{{ vms.onboarder.vcpu }}" \
+            --cpu host-passthrough \
+            --disk size={{ vms.onboarder.disk_size }},backing_store="{{ vms.onboarder.backing_store }}" \
+            --os-variant={{ vms.onboarder.os_variant }} \
+            --network bridge={{ vms.onboarder.mgmt_bridge }},model=virtio \
+            --noautoconsole \
+            --import \
+            --autostart \
+            --cloud-init \
+              user-data="{{ libvirt_cfg }}/cloud-init/onboarder/user-data",\
+              meta-data="{{ libvirt_cfg }}/cloud-init/onboarder/meta-data",\
+              network-config="{{ libvirt_cfg }}/cloud-init/onboarder/network-config"
+        fi
+      args:
+        executable: /bin/bash
+
+    # ---------- virt-install: MCM ----------
+    - name: Create VM: MCM
+      ansible.builtin.shell: |
+        set -euo pipefail
+        if ! virsh dominfo "{{ vms.mcm.name }}" >/dev/null 2>&1; then
+          virt-install \
+            --name "{{ vms.mcm.name }}" \
+            --ram "{{ vms.mcm.ram }}" \
+            --vcpu "{{ vms.mcm.vcpu }}" \
+            --cpu host-passthrough \
+            --disk size={{ vms.mcm.disk_size }},backing_store="{{ vms.mcm.backing_store }}" \
+            --os-variant={{ vms.mcm.os_variant }} \
+            --network bridge={{ vms.mcm.mgmt_bridge }},model=virtio \
+            --network bridge={{ vms.mcm.prov_bridge }},model=virtio \
+            --noautoconsole \
+            --import \
+            --autostart \
+            --cloud-init \
+              user-data="{{ libvirt_cfg }}/cloud-init/mcm/user-data",\
+              meta-data="{{ libvirt_cfg }}/cloud-init/mcm/meta-data",\
+              network-config="{{ libvirt_cfg }}/cloud-init/mcm/network-config"
+        fi
+      args:
+        executable: /bin/bash
+
+    # ---------- virt-install: OSMS ----------
+    - name: Create VM: OSMS
+      ansible.builtin.shell: |
+        set -euo pipefail
+        if ! virsh dominfo "{{ vms.osms.name }}" >/dev/null 2>&1; then
+          virt-install \
+            --name "{{ vms.osms.name }}" \
+            --ram "{{ vms.osms.ram }}" \
+            --vcpu "{{ vms.osms.vcpu }}" \
+            --cpu host-passthrough \
+            --disk size={{ vms.osms.disk_size }},backing_store="{{ vms.osms.backing_store }}" \
+            --os-variant={{ vms.osms.os_variant }} \
+            --network bridge={{ vms.osms.mgmt_bridge }},model=virtio \
+            --noautoconsole \
+            --import \
+            --autostart \
+            --cloud-init \
+              user-data="{{ libvirt_cfg }}/cloud-init/osms/user-data",\
+              meta-data="{{ libvirt_cfg }}/cloud-init/osms/meta-data",\
+              network-config="{{ libvirt_cfg }}/cloud-init/osms/network-config"
+        fi
+      args:
+        executable: /bin/bash
+
+    # ---------- virt-install: OSDC provisioner (kernel IP args) ----------
+    - name: Compute netmask from prefixlen for OSDC
+      ansible.builtin.set_fact:
+        _osdc_netmask: "{{ (vms.osdc_provisioner.prefixlen | int) | ipaddr('netmask') }}"
+
+    - name: Create VM: OSDC provisioner (Kickstart + static IP via kernel args)
+      ansible.builtin.shell: |
+        set -euo pipefail
+        if ! virsh dominfo "{{ vms.osdc_provisioner.name }}" >/dev/null 2>&1; then
+          virt-install \
+            --name "{{ vms.osdc_provisioner.name }}" \
+            --ram "{{ vms.osdc_provisioner.ram }}" \
+            --vcpu "{{ vms.osdc_provisioner.vcpu }}" \
+            --cpu host-passthrough \
+            --disk size={{ vms.osdc_provisioner.disk_size }} \
+            --location {{ vms.osdc_provisioner.iso }},initrd=isolinux/initrd.img,kernel=isolinux/vmlinuz \
+            --initrd-inject {{ libvirt_cfg }}/vm_config/osdc/prov_vm_ks.cfg \
+            --extra-args="inst.ks=file:/prov_vm_ks.cfg console=tty0 ip={{ vms.osdc_provisioner.ip }}::{{ vms.osdc_provisioner.gw }}:{{ _osdc_netmask }}:{{ vms.osdc_provisioner.hostname }}:eth0:none {% for d in vms.osdc_provisioner.dns %}nameserver={{ d }} {% endfor %}" \
+            --os-variant={{ vms.osdc_provisioner.os_variant }} \
+            --network bridge={{ vms.osdc_provisioner.bmc_bridge }},model=virtio \
+            --noautoconsole \
+            --autostart
+        fi
+      args:
+        executable: /bin/bash

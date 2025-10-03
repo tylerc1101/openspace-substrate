@@ -1,0 +1,62 @@
+#cloud-config
+write_files:
+- path: /etc/rancher/rke2/config.yaml.d/60-rancher.yaml
+  content: |
+    {
+    "system-default-registry": ""
+    }
+- path: /etc/sysctl.d/50-substrate.conf
+  content: |
+    fs.inotify.max_user_instances=12288
+    fs.inotify.max_user_watches=524288
+- path: /etc/systemd/system/rke2-server.service.d/override.conf
+  content: |
+    [Service]
+    LimitNOFILE=infinity
+- path: /etc/systemd/system/rke2-agent.service.d/override.conf
+  content: |
+    [Service]
+    LimitNOFILE=infinity
+- path: /etc/NetworkManager/conf.d/rke2-canal.conf
+  content: |
+    [keyfile]
+    unmanaged-devices=interface-name:cali*;interface-name:flannel*
+runcmd:
+  - systemctl disable firewalld
+  - systemctl stop firewalld
+  - sysctl --system
+users:
+  - name: openspace
+    groups: sudo
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    ssh_authorized_keys:
+    - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCKygZVBD05wX/iArbVoxH8gZuaeFvWq+noclSlg1e6q1Q0VDwfVLxDxkoMFYSwW1H/5wFWgNvBJ0mpO9E2InjK+o/CZ+YKvkplL/gpD5LdI8ft0oqBB9SSG6g40afxnzdfGOZ7rHaraA4CER8WwzWDg/+Yx3J5Hg/npGNQCVAzt5jxAuM5qahfeF4w8PThIKEf6+2oXHnYmz9Kfi2Wx+rK/bXNPiJRaAo5E85eHPknAV6IgRR5E6N+3ZDg6pGmbxx+sfBTTwVgjQ9Ia6ydXz0YfOlyRyIG8N+3bLEHhPKAw36MenQts8PidVXrDttwQ9FmizIX1E7tGQS/nrilXZvJ2VseoZIdDaohpH1nNubVuwBwY7liN/b+E/TIcoV8tK53QwJmKEnb5L5lJr3tuN2itc1fGgXng6xNlM+Km4uP+84BU5wKFIwrM8wRwZZ+44U64TDG/32PF4L325ESzuJZRUs4GLY1OQztEZETAHGrno0R4tc/xHRdZsJCazeGX7zltJ7qBrQEnyF5Z4K+C/8GozUK30sZ8OnlCsX0+5YlFRZE6VEysL1c27pmhkNOgk4ubhfZ+44DSI9Pu22btXbu0rPSPr7UWCOGOnKGFrhIpEGRQjmQlDWXxMGyeRwUCME9cNoghV3SdiDBr3YPEXESAvk6mSSsS45+eRZBI4uMpw== root@mgmt-kvm.base-kit.kratos
+ 
+ntp:
+  enabled: true
+  ntp_client: chrony
+  servers:
+    - 192.168.2.1
+  config:
+    service_name: chronyd
+    template: |
+        ## template:jinja
+        # Cloud-init Chrony Template
+        {% if pools -%}# pools{% endif %}
+        {% for pool in pools -%}
+        pool {{pool}} iburst
+        {% endfor %}
+        {%- if servers %}# servers
+        {% endif %}
+        {% for server in servers -%}
+        server {{server}} iburst
+        {% endfor %}
+        {% if peers -%}# peers{% endif %}
+        {% for peer in peers -%}
+        peer {{peer}}
+        {% endfor %}
+        {% if allow -%}# allow{% endif %}
+        {% for cidr in allow -%}
+        allow {{cidr}}
+        {% endfor %}
