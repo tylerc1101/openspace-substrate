@@ -1,3 +1,0 @@
-profile: basekit
-basekit_root: "/opt/openspace/openspace-base-kit/1.0.1"
-libvirt_cfg: /var/lib/libvirt/config

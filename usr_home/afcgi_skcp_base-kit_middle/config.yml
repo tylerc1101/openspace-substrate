@@ -3,117 +3,60 @@ all:
   children:
     basekit:
       vars:
-        onboarder: "onboarder-full.3.6.0.tar.gz"
-        osms: "openspace-1.9.0-295.os-app"
-        basekit: "openspace-base-kit-1.0.1-config.tar.gz"
-        dns:
-          kratos: ["10.243.25.50", "10.243.25.53"]
-          rke2: "192.168.2.1"
-          domain_name: "base-kit.kratos"
+        install_bundle:
+          onboarder: "onboarder-full.3.6.0.tar.gz"
+          osms: "openspace-1.9.0-295.os-app"
+          basekit: "openspace-base-kit-1.0.1-config.tar.gz"
+
+        domain_name: "base-kit.kratos"
+
+        customer_network:
+          gateway: "10.243.76.1"
+          cidr: "/23"
+          dns_servers: ["10.243.25.50", "10.243.25.53"]
+
+        mgmt_network:
+          gateway: "192.168.2.1"
+          cidr: "/24"
+          dns_servers: ["192.168.2.1"]
+
         ntp:
-          servers: "192.168.2.1"
-        gateway:
-          management: "10.243.76.1"
-          rke2: "192.168.2.1"
+          server: "192.168.2.100"
 
       children:
         mgmt-svr:
-          vars:
           hosts:
             mgmt-kvm: 
               ansible_host: 10.243.77.213
-              interfaces:
-                - name: "wan"
-                  ifname: "br-wan"
-                  con-name: "br-wan"
-                  type: "bridge"
-                  address: "10.243.77.213/23"
-                  gateway: "{{ gateway.management }}"
-                  dns: "{{ dns.kratos }}"
-                  interfaces:
-                    - "eno12409"
+              ansible_user: kratos
 
-                - name: "mgmt"
-                  ifname: "br-mgmt"
-                  con-name: "br-mgmt"
-                  type: "bridge"
-                  address: "192.168.2.6/24"
-                  dns: "{{ dns.rke2 }}"
-                  interfaces:
-                    - "eno12399"
+              wan_address: "{{ hostvars['mgmt-kvm'].ansible_host }}"
+              wan_interface: "eno12409"
 
-                - name: "idrac"
-                  ifname: "br-idrac"
-                  con-name: "br-idrac"
-                  type: "bridge"
-                  address: "192.168.0.4/24"
-                  interfaces:
-                    - "ens3f0"
+              mgmt_address: "192.168.2.6"
+              mgmt_interface: "eno12399"
 
-                - name: "prov"
-                  ifname: "br-prov"
-                  con-name: "br-prov"
-                  type: "bridge"
-                  interfaces:
-                    - "eno8303"
-  
-              disabled_interfaces:
-                - "eno12399"
-                - "ens3f0"
-                - "ens3f1"
-                - "eno8303"
-                - "eno8403"
+              idrac_address: "192.168.0.4"
+              idrac_interface: "ens3f0"
 
-              prevent_from_being_default_route:
-                - br-iDRAC
-                - br-prov
-                - br-mgmt
-                - eno8403
-                - ens3f1
+              prov_interface: "eno8303"
                 
         vms:
           children:
-            vars:
-              onboarder_key_path: "/var/lib/libvirt/config/vm_config/onboarder/onboarder_ssh_key"
-              mcm_key_path: "/var/lib/libvirt/config/vm_config/mcm/rancher_ssh_key"
-              osms_key_path: "/var/lib/libvirt/config/vm_config/osms/osms_ssh_key"
-              ansible_user: "openspace"
-              ansible_ssh_common_args: >-
-                -o ProxyJump=kratos@10.243.77.213
-                -o ServerAliveInterval=60 -o ServerAliveCountMax=5
-                -o ControlMaster=auto -o ControlPersist=60s
             hosts:
-              onboarder: 
-                ansible_host: 192.168.2.7
               mcm: 
                 ansible_host: 192.168.2.8
               osms: 
                 ansible_host: 192.168.2.9
+              opensense:
+                wan_ip: "10.243.77.223"
         osdc:
-          vars:
-            cluster_name: "osdc-cluster"
           hosts:
             osdc1: 
               ansible_host: 192.168.0.16
-              interfaces:
-                - name: "static_enp1s0"
-                  ifname: "enp1s0"
-                  con_name: "static-enp1s0"
-                  type: "ethernet"
-                  address: "192.168.0.16/24"
-                  gateway: "{{ gateway.rke2 }}"
-                  dns: "{{ dns.rke2 }}"
-              disabled_interfaces:
-                - "something_else"
+              interface: "enp1s0"
+              mac_address: "30:3E:A7:2E:3A:8B"
             osdc2: 
               ansible_host: 192.168.0.17
-              interfaces:
-                - name: "static_enp1s0"
-                  ifname: "enp1s0"
-                  con_name: "static-enp1s0"
-                  type: "ethernet"
-                  address: "192.168.0.17/24"
-                  gateway: "{{ gateway.rke2 }}"
-                  dns: "{{ dns.rke2 }}"
-              disabled_interfaces:
-                - "something_else"
+              interface: "enp1s0"
+              mac_address: "30:3E:A7:2E:3A:8C"

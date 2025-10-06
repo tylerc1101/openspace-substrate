@@ -1,0 +1,23 @@
+- name: Deploy and configure OPNsense VM
+  hosts: mgmt-kvm
+  become: yes
+  tasks:
+    - name: Deploy config.env
+      copy:
+        dest: "/var/lib/libvirt/vm_config/opnsense/config.env"
+        # Figure out how to variablize the WAN_SUBNET later
+        content: |
+          OSDC1_MAC="{{ osdc.osdc1.mac_address }}"
+          WAN_IP="{{ vms.opnsense.wan_ip }}"
+          WAN_GATEWAY="{{ gateway.management }}"
+          WAN_SUBNET="23"
+          NTP_TIMESERVERS="{{ ntp.servers }}"
+          NTP_PREFER="192.168.2.100"
+          OPNSENSE_HOSTNAME="opnsense"
+          OPNSENSE_DOMAIN="base-kit.kratos"
+          INTERFACE_WAN="vtnet1"
+          INTERFACE_LAN="vtnet0"
+          INTERFACE_OPT1="vtnet2"
+        owner: root
+        group: root
+        mode: "0644"

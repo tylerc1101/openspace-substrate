@@ -6,7 +6,7 @@
   tasks:
     - name: Set Hostname
       hostname:
-        name: mgmt-kvm.{{ dns.domain_name }}
+        name: "{{ inventory_hostname }}.{{ domain_name }}"
 
     - name: Ensure bridge connections exist and are configured
       community.general.nmcli:
@@ -35,21 +35,15 @@
         state: present
       loop: "{{ interfaces | subelements('interfaces', skip_missing=True) }}"
 
-    - name: Disable unused interfaces (IPv4/IPv6)
+    - name: Disable interfaces
       community.general.nmcli:
         conn_name: "{{ item }}"
         type: ethernet
         method4: disabled
         method6: disabled
-        state: present
-      loop: "{{ disabled_interfaces | default([]) }}"
-
-    - name: Prevent specific bridges/ports from becoming default route
-      community.general.nmcli:
-        conn_name: "{{ item }}"
         ipv4_never_default: yes
         state: present
-      loop: "{{ prevent_from_being_default_route | default([]) }}"
+      loop: "{{ interfaces | subelements('interfaces', skip_missing=True) }}"
 
     - name: Bring up member NICs (slaves)
       community.general.nmcli:
@@ -65,26 +59,12 @@
 
     - name: Create repo file
       copy:
-        dest: /etc/yum.repos.d/basekit.repo
-        content: |
-          [rhel-9-baseos-rhui-rpms]
-          name=Red Hat Enterprise Linux 9 for $basearch - BaseOS from RHUI (RPMs)
-          baseurl=https://rhel9-repo.secops.kratosdefense.com/rhel-9-baseos-rhui-rpms
-          enabled=1
-          gpgcheck=1
-
-          [rhel-9-appstream-rhui-rpms]
-          name=Red Hat Enterprise Linux 9 for $basearch - AppStream from RHUI (RPMs)
-          baseurl=https://rhel9-repo.secops.kratosdefense.com/rhel-9-appstream-rhui-rpms
-          enabled=1
-          gpgcheck=1
-
-          [rhui-client-config-server-9]
-          name=Red Hat Enterprise Linux 9 for $basearch - Client Config from RHUI (RPMs)
-          baseurl=https://rhel9-repo.secops.kratosdefense.com/rhui-client-config-server-9
-          enabled=1
-          gpgcheck=1
-
+        source: /data/files/kratos.repo
+        dest: /etc/yum.repos.d/kratos.repo
+        owner: root
+        group: root
+        mode: "0644"
+        
     - name: Install required packages
       yum:
         name:
@@ -115,11 +95,5 @@
       loop:
         - libvirtd
         - cockpit
-
-    - name: Create scripts directory
-      file:
-        path: /opt/kratos/power_scripts
-        state: directory
-        mode: "0755"
 
     

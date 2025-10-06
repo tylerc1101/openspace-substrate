@@ -1,0 +1,8 @@
+onboarder_key_path: "/var/lib/libvirt/config/vm_config/onboarder/onboarder_ssh_key"
+mcm_key_path: "/var/lib/libvirt/config/vm_config/mcm/rancher_ssh_key"
+osms_key_path: "/var/lib/libvirt/config/vm_config/osms/osms_ssh_key"
+ansible_user: "openspace"
+ansible_ssh_common_args: >-
+  -o ProxyJump={{ hostvars['mgmt-kvm'].ansible_user }}@{{ hostvars['mgmt-kvm'].ansible_host }}
+  -o ServerAliveInterval=60 -o ServerAliveCountMax=5
+  -o ControlMaster=auto -o ControlPersist=60s

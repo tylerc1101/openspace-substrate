@@ -9,7 +9,7 @@
   tasks:
     - name: Extract base-kit archive
       ansible.builtin.unarchive:
-        src: "/data/images/{{ basekit}}"
+        src: "/data/images/{{ basekit }}"
         dest: "/var/lib/libvirt/config"
         extra_opts:
           - "--no-overwrite-dir"
@@ -18,23 +18,21 @@
     - name: Create VM: MCM
       ansible.builtin.shell: |
         set -euo pipefail
-        if ! virsh dominfo "{{ vms.mcm.name }}" >/dev/null 2>&1; then
+        if ! virsh dominfo mcm >/dev/null 2>&1; then
           virt-install \
-            --name "{{ vms.mcm.name }}" \
-            --ram "{{ vms.mcm.ram }}" \
-            --vcpu "{{ vms.mcm.vcpu }}" \
+            --name mcm \
+            --ram 16384 \
+            --vcpu 8 \
             --cpu host-passthrough \
-            --disk size={{ vms.mcm.disk_size }},backing_store="{{ vms.mcm.backing_store }}" \
-            --os-variant={{ vms.mcm.os_variant }} \
-            --network bridge={{ vms.mcm.mgmt_bridge }},model=virtio \
-            --network bridge={{ vms.mcm.prov_bridge }},model=virtio \
+            --disk size=500,backing_store="/var/lib/libvirt/config/images/9_5_hardened_image_vm.qcow2" \
+            --os-variant=rhel9.5 \
+            --network bridge=br-mgmt,model=virtio \
+            --network bridge=br-prov,model=virtio \
             --noautoconsole \
             --import \
             --autostart \
-            --cloud-init \
-              user-data="{{ libvirt_cfg }}/cloud-init/mcm/user-data",\
-              meta-data="{{ libvirt_cfg }}/cloud-init/mcm/meta-data",\
-              network-config="{{ libvirt_cfg }}/cloud-init/mcm/network-config"
+            --graphics vnc \
+            --boot uefi
         fi
       args:
         executable: /bin/bash
@@ -43,22 +41,20 @@
     - name: Create VM: OSMS
       ansible.builtin.shell: |
         set -euo pipefail
-        if ! virsh dominfo "{{ vms.osms.name }}" >/dev/null 2>&1; then
+        if ! virsh dominfo osms >/dev/null 2>&1; then
           virt-install \
-            --name "{{ vms.osms.name }}" \
-            --ram "{{ vms.osms.ram }}" \
-            --vcpu "{{ vms.osms.vcpu }}" \
+            --name osms \
+            --ram 32768 \
+            --vcpu 16 \
             --cpu host-passthrough \
-            --disk size={{ vms.osms.disk_size }},backing_store="{{ vms.osms.backing_store }}" \
-            --os-variant={{ vms.osms.os_variant }} \
-            --network bridge={{ vms.osms.mgmt_bridge }},model=virtio \
+            --disk size=600,backing_store="/var/lib/libvirt/config/images/9_5_hardened_image_vm.qcow2" \
+            --os-variant=rhel9.5 \
+            --network bridge=br-mgmt,model=virtio \
             --noautoconsole \
             --import \
             --autostart \
-            --cloud-init \
-              user-data="{{ libvirt_cfg }}/cloud-init/osms/user-data",\
-              meta-data="{{ libvirt_cfg }}/cloud-init/osms/meta-data",\
-              network-config="{{ libvirt_cfg }}/cloud-init/osms/network-config"
+            --graphics vnc \
+            --boot uefi
         fi
       args:
         executable: /bin/bash
@@ -71,20 +67,20 @@
     - name: Create VM: OSDC provisioner (Kickstart + static IP via kernel args)
       ansible.builtin.shell: |
         set -euo pipefail
-        if ! virsh dominfo "{{ vms.osdc_provisioner.name }}" >/dev/null 2>&1; then
+        if ! virsh dominfo osdc-provisioner >/dev/null 2>&1; then
           virt-install \
-            --name "{{ vms.osdc_provisioner.name }}" \
-            --ram "{{ vms.osdc_provisioner.ram }}" \
-            --vcpu "{{ vms.osdc_provisioner.vcpu }}" \
+            --name osdc-provisioner \
+            --ram 6144 \
+            --vcpu 4 \
             --cpu host-passthrough \
-            --disk size={{ vms.osdc_provisioner.disk_size }} \
-            --location {{ vms.osdc_provisioner.iso }},initrd=isolinux/initrd.img,kernel=isolinux/vmlinuz \
-            --initrd-inject {{ libvirt_cfg }}/vm_config/osdc/prov_vm_ks.cfg \
-            --extra-args="inst.ks=file:/prov_vm_ks.cfg console=tty0 ip={{ vms.osdc_provisioner.ip }}::{{ vms.osdc_provisioner.gw }}:{{ _osdc_netmask }}:{{ vms.osdc_provisioner.hostname }}:eth0:none {% for d in vms.osdc_provisioner.dns %}nameserver={{ d }} {% endfor %}" \
-            --os-variant={{ vms.osdc_provisioner.os_variant }} \
-            --network bridge={{ vms.osdc_provisioner.bmc_bridge }},model=virtio \
+            --disk size=100 \
+            --location /var/lib/libvirt/config/images/Rocky-9.4-x86_64-dvd.iso,initrd=isolinux/initrd.img,kernel=isolinux/vmlinuz \
+            --initrd-inject /var/lib/libvirt/config/vm_config/osdc/prov_vm_ks.cfg \
+            --extra-args="inst.ks=file:/prov_vm_ks.cfg console=tty0" \
+            --os-variant=rocky9 \
+            --network bridge=br-iDRAC,model=virtio \
             --noautoconsole \
-            --autostart
+            --noautostart
         fi
       args:
         executable: /bin/bash
