@@ -7,99 +7,12 @@
     basekit_root: /opt/openspace/openspace-base-kit/1.0.1
 
   tasks:
-    - name: Ensure cloud-init dirs exist
-      ansible.builtin.file:
-        path: "{{ item }}"
-        state: directory
-        mode: "0755"
-      loop:
-        - "{{ libvirt_cfg }}/cloud-init/onboarder"
-        - "{{ libvirt_cfg }}/cloud-init/mcm"
-        - "{{ libvirt_cfg }}/cloud-init/osms"
-
-    # Build vm -> pubkey map (assumes you've already created + slurped keys)
-    - name: Build vm->pubkey map
-      ansible.builtin.set_fact:
-        _vm_pubkeys:
-          onboarder: "{{ ONBOARDER_SSH_KEY | default('') }}"
-          mcm: "{{ MCM_SSH_KEY | default('') }}"
-          osms: "{{ OSMS_SSH_KEY | default('') }}"
-
-    # -------- INLINE "TEMPLATES" AS COPIES --------
-    - name: Render cloud-init for cloud-image VMs (inline copy content)
-      vars:
-        vm: "{{ vms[item] }}"
-        vm_pubkey: "{{ _vm_pubkeys[item] }}"
-        ci_dir_map:
-          onboarder: onboarder
-          mcm: mcm
-          osms: osms
-      block:
-        - name: Write network-config (inline)
-          ansible.builtin.copy:
-            dest: "{{ libvirt_cfg }}/cloud-init/{{ ci_dir_map[item] }}/network-config"
-            mode: "0644"
-            content: |
-              version: 2
-              ethernets:
-                eth0:
-                  addresses: [ "{{ vm.ip }}" ]
-                  gateway4: "{{ vm.gw }}"
-                  nameservers:
-                    search: [ "{{ dns.domain_name }}" ]
-                    addresses: {{ vm.dns | to_json }}
-        - name: Write user-data (inline)
-          ansible.builtin.copy:
-            dest: "{{ libvirt_cfg }}/cloud-init/{{ ci_dir_map[item] }}/user-data"
-            mode: "0644"
-            content: |
-              #cloud-config
-              preserve_hostname: false
-              hostname: "{{ vm.hostname }}"
-              ssh_authorized_keys:
-                - "{{ vm_pubkey }}"
-              package_update: false
-              package_upgrade: false
-      loop:
-        - onboarder
-        - mcm
-        - osms
-    # ---------------------------------------------
-
-    - name: Copy meta-data (onboarder/mcm/osms)
-      ansible.builtin.copy:
-        src: "{{ basekit_root }}/config/cloud-init/{{ item }}/meta-data"
-        dest: "{{ libvirt_cfg }}/cloud-init/{{ item }}/meta-data"
-        remote_src: true
-        mode: "0644"
-      loop:
-        - onboarder
-        - mcm
-        - osms
-
-    # ---------- virt-install: Onboarder ----------
-    - name: Create VM: Onboarder (idempotent with virsh dominfo check)
-      ansible.builtin.shell: |
-        set -euo pipefail
-        if ! virsh dominfo "{{ vms.onboarder.name }}" >/dev/null 2>&1; then
-          virt-install \
-            --name "{{ vms.onboarder.name }}" \
-            --ram "{{ vms.onboarder.ram }}" \
-            --vcpu "{{ vms.onboarder.vcpu }}" \
-            --cpu host-passthrough \
-            --disk size={{ vms.onboarder.disk_size }},backing_store="{{ vms.onboarder.backing_store }}" \
-            --os-variant={{ vms.onboarder.os_variant }} \
-            --network bridge={{ vms.onboarder.mgmt_bridge }},model=virtio \
-            --noautoconsole \
-            --import \
-            --autostart \
-            --cloud-init \
-              user-data="{{ libvirt_cfg }}/cloud-init/onboarder/user-data",\
-              meta-data="{{ libvirt_cfg }}/cloud-init/onboarder/meta-data",\
-              network-config="{{ libvirt_cfg }}/cloud-init/onboarder/network-config"
-        fi
-      args:
-        executable: /bin/bash
+    - name: Extract base-kit archive
+      ansible.builtin.unarchive:
+        src: "/data/images/{{ basekit}}"
+        dest: "/var/lib/libvirt/config"
+        extra_opts:
+          - "--no-overwrite-dir"
 
     # ---------- virt-install: MCM ----------
     - name: Create VM: MCM

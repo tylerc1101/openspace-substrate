@@ -2,93 +2,68 @@
 - name: Stage OpenSpace base-kit assets on mgmt-kvm
   hosts: mgmt-kvm
   become: yes
-  vars:
-    basekit_root: "/opt/openspace/openspace-base-kit/1.0.1"
-    libvirt_cfg: /var/lib/libvirt/config
-
   tasks:
-    - name: Ensure base directory exists
-      ansible.builtin.file:
-        path: "/opt/openspace"
-        state: directory
-        owner: kratos
-        group: kratos
-        mode: "0755"
-
-    - name: Extract base-kit archive to /opt/openspace
+    
+    - name: Extract base-kit archive
       ansible.builtin.unarchive:
         src: "/data/images/{{ basekit}}"
-        dest: "/opt/openspace"
-        remote_src: true
+        dest: "/var/lib/libvirt/config"
         extra_opts:
           - "--no-overwrite-dir"
-      register: unpack
+
+    - name: Copy in libvirt config directory
+      copy:
+        src: "/data/images/openspace-base-kit-1.0.1/config"
+        dest: "/var/lib/libvirt/config"
+        owner: root
+        group: root
+        mode: "0755"
 
     - name: Create libvirt config directory tree
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
+        owner: root
+        group: root
         mode: "0755"
       loop:
-        - "{{ libvirt_cfg }}"
-        - "{{ libvirt_cfg }}/vm_config"
-        - "{{ libvirt_cfg }}/packages"
-        - "{{ libvirt_cfg }}/images"
-        - "{{ libvirt_cfg }}/cloud-init"
-        - "{{ libvirt_cfg }}/cloud-init/onboarder"
-        - "{{ libvirt_cfg }}/cloud-init/mcm"
-        - "{{ libvirt_cfg }}/cloud-init/osms"
-        - "{{ libvirt_cfg }}/vm_config/onboarder"
-        - "{{ libvirt_cfg }}/vm_config/mcm"
-        - "{{ libvirt_cfg }}/vm_config/osms"
-        - "{{ libvirt_cfg }}/vm_config/osdc"
-        - "{{ libvirt_cfg }}/vm_config/opnsense"
+        - "/var/lib/libvirt/config/packages"
+        - "/var/lib/libvirt/config/images"
+        - "/var/lib/libvirt/config/vm_config/onboarder"
+        - "/var/lib/libvirt/config/vm_config/mcm"
+        - "/var/lib/libvirt/config/vm_config/osms"
 
     # ----- Stage images -----
-    - name: Copy images to {{ libvirt_cfg }}/images
+    - name: Copy images to /var/lib/libvirt/config/images
       ansible.builtin.copy:
         src: "{{ item }}"
-        dest: "{{ libvirt_cfg }}/images/{{ item }}"
+        dest: "/var/lib/libvirt/config/images/{{ item }}"
         remote_src: true
         mode: "0644"
       loop:
-        - "{{ basekit_root }}/images/opnsense/OPNsense-24.7-dvd-amd64.iso"
-        - "{{ basekit_root }}/images/onboarder_vm/onboarder-image-1.0.1.qcow2"
-        - "{{ basekit_root }}/images/substrate/openspace-rocky94-substrate-template-1.5.1.qcow2"
-        - "{{ basekit_root }}/images/rocky/Rocky-9.4-x86_64-dvd.iso"
-        - "{{ basekit_root }}/images/9_5_hardened_image_vm.qcow2"
+        - "/data/images/openpsace-base-kit/1.0.1/images/opnsense/OPNsense-24.7-dvd-amd64.iso"
+        - "/data/images/openpsace-base-kit/1.0.1/images/onboarder_vm/onboarder-image-1.0.1.qcow2"
+        - "/data/images/openpsace-base-kit/1.0.1/images/substrate/openspace-rocky94-substrate-template-1.5.1.qcow2"
+        - "/data/images/openpsace-base-kit/1.0.1/images/rocky/Rocky-9.4-x86_64-dvd.iso"
+        - "/data/images/9_5_hardened_image_vm.qcow2"
 
     # ----- Stage packages -----
-    - name: Copy onboarder into packages
+    - name: Copy packages into /var/lib/libvirt/config/packages
       ansible.builtin.copy:
-        src: "/data/images/{{ onboarder }}"
-        dest: "{{ libvirt_cfg }}/packages/{{ onboarder }}"
+        src: "{{ item }}"
+        dest: "/var/lib/libvirt/config/packages/{{ item }}"
+        # Check owner/group/mode?
+        owner: root
+        group: root
         mode: "0644"
-
-    - name: Copy OSMS into packages
-      ansible.builtin.copy:
-        src: "/data/images/{{ osms }}"
-        dest: "{{ libvirt_cfg }}/packages/{{ osms }}"
-        mode: "0755"
-
-    # ----- Stage OPNsense vm_config templates -----
-    - name: Copy opnsense config.env template
-      ansible.builtin.copy:
-        src: "{{ basekit_root }}/config/vm_config/opnsense/config_template.env"
-        dest: "{{ libvirt_cfg }}/vm_config/opnsense/config.env"
-        remote_src: true
-        mode: "0644"
-
-    - name: Copy opnsense config_template.xml
-      ansible.builtin.copy:
-        src: "{{ basekit_root }}/config/vm_config/opnsense/config_template.xml"
-        dest: "{{ libvirt_cfg }}/vm_config/opnsense/config_template.xml"
-        remote_src: true
-        mode: "0644"
+      loop:
+        - "{{ onboarder }}"
+        - "{{ osms }}"
 
     # ----- Generate SSH keypairs -----
     - name: Ensure SSH keypairs exist
       ansible.builtin.openssh_keypair:
+        name: "{{ item.name }}"
         path: "{{ item.path }}"
         type: rsa
         size: 4096

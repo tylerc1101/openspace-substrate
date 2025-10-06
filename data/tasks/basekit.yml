@@ -8,7 +8,7 @@
   kind: ansible
   file: "/data/installer/profiles/tasks/basekit-bootstrap-mgmt-kvm.yml"
 
-- id: Setup Base-Kit Structure
-  desc: "Stage OpenSpace base-kit assets on mgmt-kvm"
+- id: Deploy VMs
+  desc: "Deploy the VMs for the base-kit profile"
   kind: ansible
-  file: "/data/installer/profiles/tasks/basekit-bootstrap-basekit-structure.yml"
+  file: "/data/installer/profiles/tasks/basekit-deploy-vms.yml"
