@@ -1,4 +1,4 @@
-- name: Deploy and configure OPNsense VM
+- name: Configure OPNsense VM
   hosts: mgmt-kvm
   become: yes
   tasks:
@@ -9,12 +9,12 @@
         content: |
           OSDC1_MAC="{{ osdc.osdc1.mac_address }}"
           WAN_IP="{{ vms.opnsense.wan_ip }}"
-          WAN_GATEWAY="{{ gateway.management }}"
-          WAN_SUBNET="23"
-          NTP_TIMESERVERS="{{ ntp.servers }}"
-          NTP_PREFER="192.168.2.100"
+          WAN_GATEWAY="{{ customer_network.gateway }}"
+          WAN_SUBNET="{{ customer_network.subnet }}"
+          NTP_TIMESERVERS="{{ ntp.server }}"
+          NTP_PREFER="{{ ntp.server }}"
           OPNSENSE_HOSTNAME="opnsense"
-          OPNSENSE_DOMAIN="base-kit.kratos"
+          OPNSENSE_DOMAIN="{{ domain_name }}"
           INTERFACE_WAN="vtnet1"
           INTERFACE_LAN="vtnet0"
           INTERFACE_OPT1="vtnet2"

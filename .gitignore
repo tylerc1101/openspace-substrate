@@ -1,0 +1,10 @@
+data/images/onboarder-full.v3.5.0-rc7.tar.gz
+data/images/base-kit-1.0.1/config/images/9_5_hardened_image_vm.qcow2
+data/images/base-kit-1.0.1/config/images/onboarder-image-1.0.1.qcow2
+data/images/base-kit-1.0.1/config/images/OPNsense-24.7-dvd-amd64.iso
+data/images/base-kit-1.0.1/config/images/Rocky-9.4-x86_64-dvd.iso
+data/images/osms-1.8.1-73/1.8.1-73.tgz
+data/images/osms-1.8.1-73/install.sh
+data/images/osms-1.9.0-295/bootstrap-k3s.sh
+data/images/osms-1.9.0-295/install.sh
+data/images/osms-1.9.0-295/openspace-1.9.0-295.os-app

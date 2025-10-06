@@ -18,9 +18,9 @@ interfaces:
     interfaces:
       - "{{ hostvars['mgmt-kvm'].mgmt_interface }}"
 
-  - name: "idrac"
-    ifname: "br-idrac"
-    con-name: "br-idrac"
+  - name: "iDRAC"
+    ifname: "br-iDRAC"
+    con-name: "br-iDRAC"
     type: "bridge"
     address: "{{ hostvars['mgmt-kvm'].idrac_address }}{{ hostvars['mgmt-kvm'].mgmt_network.cidr }}"
     interfaces:

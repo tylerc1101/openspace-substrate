@@ -1,0 +1,99 @@
+---
+- name: Create OpenSpace VMs
+  hosts: mgmt-kvm
+  become: yes
+  vars:
+    images_dir: /var/lib/libvirt/config/images
+
+  tasks:
+    - name: Extract base-kit archive
+      ansible.builtin.unarchive:
+        src: "/data/images/{{ basekit }}"
+        dest: "/var/lib/libvirt/config"
+        extra_opts: ["--no-overwrite-dir"]
+
+    # ---------- MCM ----------
+    - name: Create VM: MCM (module-based, import from hardened base)
+      community.libvirt.virt_install:
+        name: mcm
+        memory: 16384
+        vcpus: 8
+        cpu:
+          mode: host-passthrough
+        disks:
+          - size: 500
+            format: qcow2
+            backing_store: "{{ images_dir }}/9_5_hardened_image_vm.qcow2"
+        os_variant: rhel9.5
+        networks:
+          - bridge: br-mgmt
+            model: 
+              type: virtio
+          - bridge: br-prov
+            model:
+              type: virtio
+        import: true              
+        autostart: true           
+        noautoconsole: true      
+        graphics:
+          type: vnc              
+        boot: uefi                
+        state: running            
+      register: mcm_result
+
+    # ---------- OSMS ----------
+    - name: Create VM: OSMS (module-based, import from hardened base)
+      community.libvirt.virt_install:
+        name: osms
+        memory: 32768
+        vcpus: 16
+        cpu:
+          mode: host-passthrough
+        disks:
+          - size: 600
+            format: qcow2
+            backing_store: "{{ images_dir }}/9_5_hardened_image_vm.qcow2"
+        os_variant: rhel9.5
+        networks:
+          - bridge: br-mgmt
+            model: 
+              type: virtio
+        import: true
+        autostart: true
+        noautoconsole: true
+        graphics:
+          type: vnc
+        boot: uefi
+        state: running
+      register: osms_result
+
+    # ---------- OSDC provisioner ----------
+    - name: Create VM: OSDC provisioner
+      community.libvirt.virt_install:
+        name: osdc-provisioner
+        memory: 6144
+        vcpus: 4
+        cpu:
+          mode: host-passthrough
+        disks:
+          - size: 100
+            format: qcow2
+        cdrom: "{{ images_dir }}/Rocky-9.4-x86_64-dvd.iso"
+        boot_opts:
+          uefi: true
+          kernel: "{{ images_dir }}/Rocky-9.4-x86_64-dvd.iso/isolinux/vmlinuz"
+          initrd: "{{ images_dir }}/Rocky-9.4-x86_64-dvd.iso/isolinux/initrd.img"
+          kernel_args: >
+            inst.ks=file:/prov_vm_ks.cfg console=tty0
+        inject_files:
+          - src: "/var/lib/libvirt/config/vm_config/osdc/prov_vm_ks.cfg"
+            dest: "/prov_vm_ks.cfg" 
+        os_variant: rocky9
+        networks:
+          - bridge: br-iDRAC
+            model:
+              type: virtio
+        autostart: false               
+        noautoconsole: true            
+        state: defined                 
+      register: osdc_result
