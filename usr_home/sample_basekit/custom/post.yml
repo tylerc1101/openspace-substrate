@@ -1,0 +1,7 @@
+# Optional: custom tasks to run AFTER onboarder plan
+# Fill out with same schema as plan tasks.
+# Example:
+# - id: hello
+#   kind: bash
+#   label: "Say hello"
+#   script: "/usr_home/{{env}}/custom/pre/bash/10-hello.sh"
