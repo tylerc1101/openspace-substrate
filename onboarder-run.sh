@@ -28,17 +28,26 @@ EOF
 
 # -------- args --------
 ENV_NAME=""
-for arg in "$@"; do
-  case "$arg" in
-    --env=*) ENV_NAME="${arg#*=}";;
-    -h|--help) usage; exit 0;;
-    *) die "Unknown arg: $arg";;
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --env)
+      shift
+      [[ $# -gt 0 ]] || die "--env requires an argument"
+      ENV_NAME="$1"
+      ;;
+    --env=*)
+      ENV_NAME="${1#*=}"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      die "Unknown arg: $1"
+      ;;
   esac
+  shift
 done
-[[ -n "${ENV_NAME}" ]] || { usage; die "--env is required"; }
-
-ENV_DIR="${USR_HOME_DIR}/${ENV_NAME}"
-[[ -d "${ENV_DIR}" ]] || die "Environment dir not found: ${ENV_DIR}"
 
 # -------- runtime detection --------
 if command -v podman >/dev/null 2>&1; then
