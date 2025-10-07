@@ -26,28 +26,29 @@ Runs:
 EOF
 }
 
-# -------- args --------
-ENV_NAME=""
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --env)
-      shift
-      [[ $# -gt 0 ]] || die "--env requires an argument"
-      ENV_NAME="$1"
-      ;;
-    --env=*)
-      ENV_NAME="${1#*=}"
-      ;;
-    -h|--help)
-      usage
-      exit 0
-      ;;
-    *)
-      die "Unknown arg: $1"
-      ;;
-  esac
-  shift
-done
+# -------- pick ENV from usr_home via menu --------
+# Gather non-hidden directories in usr_home
+mapfile -t ENV_DIRS < <(
+  find "${USR_HOME_DIR}" -mindepth 1 -maxdepth 1 -type d \
+    ! -name '.*' \
+    ! -name 'sample_aws' \
+    ! -name 'sample_baremetal' \
+    ! -name 'sample_basekit' \
+    -printf "%f\n" | sort
+)
+
+[[ ${#ENV_DIRS[@]} -ge 1 ]] || die "No environment directories found in ${USR_HOME_DIR}"
+
+if [[ -t 0 ]]; then
+  echo "Select environment:"
+  select ENV_NAME in "${ENV_DIRS[@]}"; do
+    if [[ -n "${ENV_NAME:-}" ]]; then
+      break
+    else
+      echo "Invalid selection. Try again."
+    fi
+  done
+fi
 
 ENV_DIR="${USR_HOME_DIR}/${ENV_NAME}"
 [[ -d "${ENV_DIR}" ]] || die "Environment dir not found: ${ENV_DIR}"
@@ -107,27 +108,14 @@ IMAGE_ARCHIVE="${DATA_DIR}/images/onboarder/${ONBOARDER_TAR}"
 
 # -------- load image --------
 echo "Loading image: ${IMAGE_ARCHIVE}"
-LOAD_OUT="$(${RUNTIME} load -i "${IMAGE_ARCHIVE}" 2>&1 || true)"
-echo "${LOAD_OUT}"
 
-IMAGE_REF=""
-# docker: "Loaded image: repo:tag"
-# podman: "Loaded image(s): repo:tag"
-if [[ "${LOAD_OUT}" =~ Loaded[[:space:]]image(s)?:[[:space:]]([[:graph:]]+) ]]; then
-  IMAGE_REF="${BASHREMATCH[2]}"
+if [[ -z $(${RUNTIME} images --format '{{.Repository}}:{{.Tag}}') ]]; then
+  ${RUNTIME} load -i "${IMAGE_ARCHIVE}"
+else
+  echo "Image already loaded"
 fi
-# fallback: try to pick something onboarder-ish or the latest image
-if [[ -z "${IMAGE_REF}" ]]; then
-  CAND="$(${RUNTIME} images --format '{{.Repository}}:{{.Tag}}' | grep -i '^onboarder' | head -1 || true)"
-  if [[ -n "${CAND}" ]]; then
-    IMAGE_REF="${CAND}"
-  else
-    IMAGE_REF="$(${RUNTIME} images --format '{{.Repository}}:{{.Tag}}' | head -1 || true)"
-  fi
-fi
-[[ -n "${IMAGE_REF}" ]] || die "Could not determine image reference after load"
 
-echo "Using image: ${IMAGE_REF}"
+IMAGE_REF="$(${RUNTIME} images --format '{{.Repository}}:{{.Tag}}' | grep -i 'onboarder' | head -1 || true)"
 
 # -------- container name --------
 CONTAINER_NAME="onboarder"
@@ -145,7 +133,7 @@ HOST_UID="$(id -u)"
 HOST_GID="$(id -g)"
 
 set -x
-${RUNTIME} run --rm \
+${RUNTIME} run  \
   --name "${CONTAINER_NAME}" \
   -u "${HOST_UID}:${HOST_GID}" \
   -v "${DATA_DIR}:/install/data:rw" \
@@ -155,7 +143,7 @@ ${RUNTIME} run --rm \
   "${IMAGE_REF}" \
   python3 /install/data/main.py \
     --env "${ENV_NAME}" \
-    --profile "${PROFILE_KIND}"
+    --profile "${PROFILE_YAML}"
 set +x
 
 echo "Onboarder run complete. Logs: ${LOG_DIR}"
