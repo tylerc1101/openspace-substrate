@@ -6,7 +6,7 @@
   tasks:
     - name: Set Hostname
       hostname:
-        name: "{{ inventory_hostname }}.{{ domain_name }}"
+        name: "mgmt-kvm.{{ domain_name }}"
 
     - name: Ensure bridge connections exist and are configured
       community.general.nmcli:

@@ -3,12 +3,6 @@ all:
   children:
     basekit:
       vars:
-        profile: "basekit"
-        install_bundle:
-          onboarder: "onboarder-full.3.6.0.tar.gz"
-          osms: "openspace-1.9.0-295.os-app"
-          basekit: "openspace-base-kit-1.0.1-config.tar.gz"
-
         domain_name: "base-kit.kratos"
 
         customer_network:
@@ -51,6 +45,7 @@ all:
                 ansible_host: 192.168.2.9
               opensense:
                 wan_ip: "10.243.77.223"
+                
         osdc:
           hosts:
             osdc1: 
