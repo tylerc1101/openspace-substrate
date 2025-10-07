@@ -49,6 +49,9 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+ENV_DIR="${USR_HOME_DIR}/${ENV_NAME}"
+[[ -d "${ENV_DIR}" ]] || die "Environment dir not found: ${ENV_DIR}"
+
 # -------- runtime detection --------
 if command -v podman >/dev/null 2>&1; then
   RUNTIME="podman"
