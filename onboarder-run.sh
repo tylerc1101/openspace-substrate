@@ -56,7 +56,9 @@ ENV_DIR="${USR_HOME_DIR}/${ENV_NAME}"
 # -------- runtime detection --------
 if command -v podman >/dev/null 2>&1; then
   RUNTIME="podman"
-  SE_SUFFIX=":Z"
+  SE_OPT_DATA="rw,Z"
+  SE_OPT_ENV="rw,Z"
+  SE_OPT_LOGS="rw,Z"
 elif command -v docker >/dev/null 2>&1; then
   RUNTIME="docker"
 else
