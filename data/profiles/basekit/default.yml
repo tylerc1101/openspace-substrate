@@ -1,5 +1,4 @@
 - id: Copy SSH Key to mgmt_kvm
-  desc: "Copy the SSH private key to the mgmt_kvm host for Ansible access"
   kind: ansible
   file: "tasks/common/copy_ssh_key.yml"
   args:
@@ -8,28 +7,23 @@
       - "-e ssh_pubkey_path=/install/usr_home/{env}/.ssh/onboarder_ssh_key.pub"
 
 #- id: Preflight Checks
-#  desc: "Run a preflight check to ensure the environment is ready for installation"
 #  kind: python3
 #  file: "tasks/basekit/preflight.py"
 
 - id: Bootstrap Mgmt KVM
-  desc: "Configure/Install services on the mgmt-kvm server"
   kind: ansible
   file: "tasks/basekit/bootstrap-mgmt-kvm.yml"
 
 - id: Deploy VMs
-  desc: "Deploy the VMs for the base-kit profile"
   kind: ansible
   file: "tasks/basekit/deploy-vms.yml"
 
 # OPNSense is already configured from the saved config directory.
 # Will need to do this if things change
 #- id: Configure OPNsense
-#  desc: "Configure the OPNsense VM"
 #  kind: ansible
 #  file: "tasks/basekit-configure-opnsense.yml"
 
 - id: Deploy OPNsense
-  desc: "Deploy the OPNsense VM"
   kind: python3
   file: "tasks/basekit/deploy-opnsense.py"

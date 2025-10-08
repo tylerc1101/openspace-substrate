@@ -1,9 +1,15 @@
 # usr_home/<env>/config.ini
 
 [core]
+<<<<<<< HEAD:.archived/config.toml
 profile = "baremetal"
 hardened = true
 onboarder = "onboarder-full.3.6.0.tar.gz"
+=======
+infrastructure = "baremetal"          # "baremetal" | "vmware" | "aws"
+profile = "rancher-harbor"            # "rancher-harbor" | "rancher-ecr"
+hardened = true
+>>>>>>> main:usr_home/sample_environment/config.toml
 
 [dns]
 servers = ["10.0.0.52", "10.0.0.53"]
