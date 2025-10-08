@@ -136,12 +136,12 @@ HOST_UID="$(id -u)"
 HOST_GID="$(id -g)"
 
 set -x
-${RUNTIME} run  \
+${RUNTIME} run \
   --name "${CONTAINER_NAME}" \
   -u "${HOST_UID}:${HOST_GID}" \
-  -v "${DATA_DIR}:/install/data:rw${SE_SUFFIX}" \
-  -v "${ENV_DIR}:/install/usr_home/${ENV_NAME}:rw${SE_SUFFIX}" \
-  -v "${LOG_DIR}:/install/logs:rw${SE_SUFFIX}" \
+  -v "${DATA_DIR}:/install/data:${SE_OPT_DATA}" \
+  -v "${ENV_DIR}:/install/usr_home/${ENV_NAME}:${SE_OPT_ENV}" \
+  -v "${LOG_DIR}:/install/logs:${SE_OPT_LOGS}" \
   -w /install \
   "${IMAGE_REF}" \
   python3 /install/data/main.py \
