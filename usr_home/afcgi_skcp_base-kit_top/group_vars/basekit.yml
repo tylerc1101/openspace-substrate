@@ -1,0 +1,4 @@
+profile: "default"
+onboarder: "onboarder-full.v3.5.0-rc7.tar.gz"
+osms: "openspace-1.9.0-295.os-app"
+basekit: "openspace-base-kit-1.0.1-config.tar.gz"

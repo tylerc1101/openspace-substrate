@@ -1,0 +1,8 @@
+interfaces:
+  - name: "static_{{ hostvars[host].interface }}"
+    ifname: "{{ hostvars[host].interface }}"
+    con_name: "static-{{ hostvars[host].interface }}"
+    type: "ethernet"
+    address: "{{ hostvars[host].ansible_host }}/24"
+    gateway: "{{ mgmt_network.gateway }}"
+    dns: "{{ mgmt_network.dns_servers }}"
