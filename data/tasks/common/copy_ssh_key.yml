@@ -1,0 +1,40 @@
+---
+- name: Bootstrap SSH key to one or more target hosts
+  hosts: "{{ target_hosts }}"
+
+  vars_prompt:
+    - name: ansible_ssh_pass
+      prompt: "Enter SSH password for {{ ansible_user | default('kratos') }}"
+      private: yes
+
+  vars:
+    env_name: "{{ env_name | mandatory }}"
+    target_user: "{{ ansible_user | default('kratos') }}"
+    ssh_pubkey_path: "{{ ssh_pubkey_path | mandatory }}"
+
+  pre_tasks:
+    - name: Validate that ssh_pubkey_path exists
+      stat:
+        path: "{{ ssh_pubkey_path }}"
+      register: pub_stat
+      change_when: false
+
+    - name: Fail if ssh_pubkey_path does not exist
+      fail:
+        msg: "Public key file not found at {{ ssh_pubkey_path }}"
+      when: not pub_stat.stat.exists
+
+  tasks:
+    - name: Ensure ~/.ssh directory exists
+      file:
+        path: "~/{{ target_user }}/.ssh"
+        state: directory
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0700'
+
+    - name: Add environment public key to authorized_keys
+      authorized_key:
+        user: "{{ target_user }}"
+        state: present
+        key: "{{ ssh_pubkey_path }}"

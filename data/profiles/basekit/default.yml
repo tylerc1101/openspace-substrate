@@ -1,7 +1,16 @@
-- id: Preflight Checks
-  desc: "Run a preflight check to ensure the environment is ready for installation"
-  kind: python3
-  file: "tasks/basekit/preflight.py"
+- id: Copy SSH Key to mgmt_kvm
+  desc: "Copy the SSH private key to the mgmt_kvm host for Ansible access"
+  kind: ansible
+  file: "tasks/common/copy_ssh_key.yml"
+  args:
+      - "-e env_name={env}"
+      - "-e target_hosts=mgmt_kvm"
+      - "-e ssh_pubkey_path=/install/usr_home/{env}/.ssh/onboarder_ssh_key.pub"
+
+#- id: Preflight Checks
+#  desc: "Run a preflight check to ensure the environment is ready for installation"
+#  kind: python3
+#  file: "tasks/basekit/preflight.py"
 
 - id: Bootstrap Mgmt KVM
   desc: "Configure/Install services on the mgmt-kvm server"

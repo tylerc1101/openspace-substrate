@@ -19,13 +19,13 @@ all:
           server: "192.168.2.100"
 
       children:
-        mgmt-svr:
+        mgmt_svr:
           hosts:
-            mgmt-kvm: 
+            mgmt_kvm: 
               ansible_host: 10.243.77.212
               ansible_user: kratos
 
-              wan_address: "{{ hostvars['mgmt-kvm'].ansible_host }}"
+              wan_address: "{{ hostvars['mgmt_kvm'].ansible_host }}"
               wan_interface: "eno12409"
 
               mgmt_address: "192.168.2.6"
