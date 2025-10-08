@@ -17,7 +17,7 @@
       stat:
         path: "{{ ssh_pubkey_path }}"
       register: pub_stat
-      change_when: false
+      changed_when: false
 
     - name: Fail if ssh_pubkey_path does not exist
       fail:

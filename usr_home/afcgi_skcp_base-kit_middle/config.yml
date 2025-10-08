@@ -37,14 +37,13 @@ all:
               prov_interface: "eno8303"
                 
         vms:
-          children:
-            hosts:
-              mcm: 
-                ansible_host: 192.168.2.8
-              osms: 
-                ansible_host: 192.168.2.9
-              opensense:
-                wan_ip: "10.243.77.222"
+          hosts:
+            mcm: 
+              ansible_host: 192.168.2.8
+            osms: 
+              ansible_host: 192.168.2.9
+            opensense:
+              wan_ip: "10.243.77.222"
                 
         osdc:
           hosts:
