@@ -56,6 +56,7 @@ ENV_DIR="${USR_HOME_DIR}/${ENV_NAME}"
 # -------- runtime detection --------
 if command -v podman >/dev/null 2>&1; then
   RUNTIME="podman"
+  SE_SUFFIX=":Z"
 elif command -v docker >/dev/null 2>&1; then
   RUNTIME="docker"
 else
@@ -136,9 +137,9 @@ set -x
 ${RUNTIME} run  \
   --name "${CONTAINER_NAME}" \
   -u "${HOST_UID}:${HOST_GID}" \
-  -v "${DATA_DIR}:/install/data:rw" \
-  -v "${ENV_DIR}:/install/usr_home/${ENV_NAME}:rw" \
-  -v "${LOG_DIR}:/install/logs:rw" \
+  -v "${DATA_DIR}:/install/data:rw${SE_SUFFIX}" \
+  -v "${ENV_DIR}:/install/usr_home/${ENV_NAME}:rw${SE_SUFFIX}" \
+  -v "${LOG_DIR}:/install/logs:rw${SE_SUFFIX}" \
   -w /install \
   "${IMAGE_REF}" \
   python3 /install/data/main.py \
